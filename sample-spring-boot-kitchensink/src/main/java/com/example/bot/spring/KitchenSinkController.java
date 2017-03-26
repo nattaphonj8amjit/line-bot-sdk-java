@@ -241,7 +241,7 @@ public class KitchenSinkController {
         log.info("Got text message from {}: {}", replyToken, text);
         switch (text) {
             case "profile": {
-                String userId = event.getSource().getUserId();
+                String userId = (event.getSource().getUserId() != null ? event.getSource().getUserId() : event.getSource().getSenderId());
                 if (userId != null) {
                     lineMessagingClient
                             .getProfile(userId)
@@ -338,7 +338,7 @@ public class KitchenSinkController {
                         new ImagemapBaseSize(1040, 1040),
                         Arrays.asList(
                                 new URIImagemapAction(
-                                        "https://store.line.me/family/manga/en",
+                                        "https://www.google.co.th/",
                                         new ImagemapArea(
                                                 0, 0, 520, 520
                                         )
