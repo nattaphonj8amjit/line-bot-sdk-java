@@ -81,6 +81,11 @@ import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+import com.google.cloud.translate.Translate;
+import com.google.cloud.translate.Translate.TranslateOption;
+import com.google.cloud.translate.TranslateOptions;
+import com.google.cloud.translate.Translation;
+
 @Slf4j
 @LineMessageHandler
 public class KitchenSinkController {
@@ -212,7 +217,25 @@ public class KitchenSinkController {
         if (message.length() > 1000) {
             message = message.substring(0, 1000 - 2) + "……";
         }
-        this.reply(replyToken, new TextMessage(message));
+        
+         Translate translate = TranslateOptions.newBuilder()
+            .setApiKey("AIzaSyCSy4Byxmjp1Beu5-OxhE9V0xYqfqPECI4")
+            .build()
+            .getService();
+
+    // The text to translate
+    
+
+    // Translates some text into Russian
+    Translation translation =
+        translate.translate(
+            message,
+            TranslateOption.sourceLanguage("en"),
+            TranslateOption.targetLanguage("th"));
+
+        
+        
+        this.reply(replyToken, new TextMessage(message + " : "+translation.getTranslatedText()));
     }
 
     private void handleHeavyContent(String replyToken, String messageId,
@@ -237,7 +260,6 @@ public class KitchenSinkController {
     private void handleTextContent(String replyToken, Event event, TextMessageContent content)
             throws Exception {
         String text = content.getText();
-
         log.info("Got text message from {}: {}", replyToken, text);
         switch (text) {
             case "profile": {
