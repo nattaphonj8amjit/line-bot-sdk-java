@@ -230,7 +230,7 @@ public class KitchenSinkController {
     // The text to translate
     
     List<Detection> detections = translate.detect(ImmutableList.of(message));
-String language = ""
+String language = "";
     for (Detection detection : detections) {
        // System.out.println(detection.getLanguage());
         language = detection.getLanguage();
