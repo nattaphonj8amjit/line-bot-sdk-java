@@ -18,4 +18,5 @@ apply plugin: 'org.springframework.boot'
 
 dependencies {
     compile project(':line-bot-spring-boot')
+    compile group: 'com.google.cloud', name: 'google-cloud-translate', version: '0.9.4-alpha'
 }
