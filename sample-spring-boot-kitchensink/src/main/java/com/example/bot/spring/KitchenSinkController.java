@@ -86,6 +86,10 @@ import com.google.cloud.translate.Translate.TranslateOption;
 import com.google.cloud.translate.TranslateOptions;
 import com.google.cloud.translate.Translation;
 
+import java.util.List;
+import com.google.cloud.translate.Detection;
+import com.google.common.collect.ImmutableList;
+
 @Slf4j
 @LineMessageHandler
 public class KitchenSinkController {
@@ -225,16 +229,26 @@ public class KitchenSinkController {
 
     // The text to translate
     
-
-    // Translates some text into Russian
-    Translation translation =
-        translate.translate(
+    List<Detection> detections = translate.detect(ImmutableList.of(message));
+String language = ""
+    for (Detection detection : detections) {
+       // System.out.println(detection.getLanguage());
+        language = detection.getLanguage();
+    }
+        
+        Translation translation = null;
+        if("en".equalsIgnoreCase(language)){
+         translation = translate.translate(
             message,
-            TranslateOption.sourceLanguage("en"),
+            TranslateOption.sourceLanguage(language),
             TranslateOption.targetLanguage("th"));
-
-        
-        
+        }else{
+            translation =   translate.translate(
+            message,
+            TranslateOption.sourceLanguage(language),
+            TranslateOption.targetLanguage(en));
+        }
+ 
         this.reply(replyToken, new TextMessage(message + " : "+translation.getTranslatedText()));
     }
 
