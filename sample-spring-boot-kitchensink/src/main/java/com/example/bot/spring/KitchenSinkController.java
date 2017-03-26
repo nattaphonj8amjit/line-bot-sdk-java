@@ -99,10 +99,7 @@ public class KitchenSinkController {
     @EventMapping
     public void handleTextMessageEvent(MessageEvent<TextMessageContent> event) throws Exception {
         TextMessageContent message = event.getMessage();
-        if(message.getText().indexOf(".")==0){
-                handleTextContent(event.getReplyToken(), event, message.getText().replace(".", ""));
-        }
-
+                handleTextContent(event.getReplyToken(), event, message);
     }
 
     //@EventMapping
@@ -277,9 +274,12 @@ String language = "";
     private void handleTextContent(String replyToken, Event event, TextMessageContent content)
             throws Exception {
         String text = content.getText();
+        
+        
+        
         log.info("Got text message from {}: {}", replyToken, text);
         switch (text) {
-            case "profile": {
+            case "@profile": {
                 String userId = (event.getSource().getUserId() != null ? event.getSource().getUserId() : event.getSource().getSenderId());
                 if (userId != null) {
                     lineMessagingClient
@@ -304,7 +304,7 @@ String language = "";
                 }
                 break;
             }
-            case "bye": {
+            case "@bye": {
                 Source source = event.getSource();
                 if (source instanceof GroupSource) {
                     this.replyText(replyToken, "Leaving group");
@@ -317,7 +317,7 @@ String language = "";
                 }
                 break;
             }
-            case "confirm": {
+            case "@confirm": {
                 ConfirmTemplate confirmTemplate = new ConfirmTemplate(
                         "Do it?",
                         new MessageAction("Yes", "Yes!"),
@@ -327,7 +327,7 @@ String language = "";
                 this.reply(replyToken, templateMessage);
                 break;
             }
-            case "buttons": {
+            case "@buttons": {
                 String imageUrl = createUri("/static/buttons/1040.jpg");
                 ButtonsTemplate buttonsTemplate = new ButtonsTemplate(
                         imageUrl,
@@ -348,7 +348,7 @@ String language = "";
                 this.reply(replyToken, templateMessage);
                 break;
             }
-            case "carousel": {
+            case "@carousel": {
                 String imageUrl = createUri("/static/buttons/1040.jpg");
                 CarouselTemplate carouselTemplate = new CarouselTemplate(
                         Arrays.asList(
@@ -370,7 +370,7 @@ String language = "";
                 this.reply(replyToken, templateMessage);
                 break;
             }
-            case "imagemap":
+            case "@imagemap":
                 this.reply(replyToken, new ImagemapMessage(
                         createUri("/static/rich"),
                         "This is alt text",
@@ -405,10 +405,12 @@ String language = "";
                 break;
             default:
                 log.info("Returns echo message {}: {}", replyToken, text);
+                        if(text.indexOf(".")==0){
                 this.replyText(
                         replyToken,
-                        text
+                        text.replace(".", "")
                 );
+                        }
                 break;
         }
     }
