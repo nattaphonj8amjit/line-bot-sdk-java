@@ -246,7 +246,7 @@ String language = "";
             translation =   translate.translate(
             message,
             TranslateOption.sourceLanguage(language),
-            TranslateOption.targetLanguage(en));
+            TranslateOption.targetLanguage("en"));
         }
  
         this.reply(replyToken, new TextMessage(message + " : "+translation.getTranslatedText()));
