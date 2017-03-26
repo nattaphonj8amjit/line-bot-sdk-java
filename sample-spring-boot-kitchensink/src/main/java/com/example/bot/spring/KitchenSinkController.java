@@ -99,8 +99,8 @@ public class KitchenSinkController {
     @EventMapping
     public void handleTextMessageEvent(MessageEvent<TextMessageContent> event) throws Exception {
         TextMessageContent message = event.getMessage();
-        if(message.indexOf(".")==0){
-                handleTextContent(event.getReplyToken(), event, message.replace(".", ""));
+        if(message.getText().indexOf(".")==0){
+                handleTextContent(event.getReplyToken(), event, message.getText().replace(".", ""));
         }
 
     }
