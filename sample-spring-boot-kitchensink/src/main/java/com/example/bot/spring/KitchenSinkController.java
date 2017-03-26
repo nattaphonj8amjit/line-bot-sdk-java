@@ -99,15 +99,18 @@ public class KitchenSinkController {
     @EventMapping
     public void handleTextMessageEvent(MessageEvent<TextMessageContent> event) throws Exception {
         TextMessageContent message = event.getMessage();
-        handleTextContent(event.getReplyToken(), event, message);
+        if(message.indexOf(".")==0){
+                handleTextContent(event.getReplyToken(), event, message.replace(".", ""));
+        }
+
     }
 
-    @EventMapping
+    //@EventMapping
     public void handleStickerMessageEvent(MessageEvent<StickerMessageContent> event) {
         handleSticker(event.getReplyToken(), event.getMessage());
     }
 
-    @EventMapping
+    //@EventMapping
     public void handleLocationMessageEvent(MessageEvent<LocationMessageContent> event) {
         LocationMessageContent locationMessage = event.getMessage();
         reply(event.getReplyToken(), new LocationMessage(
@@ -118,7 +121,7 @@ public class KitchenSinkController {
         ));
     }
 
-    @EventMapping
+    //@EventMapping
     public void handleImageMessageEvent(MessageEvent<ImageMessageContent> event) throws IOException {
         // You need to install ImageMagick
         handleHeavyContent(
@@ -137,7 +140,7 @@ public class KitchenSinkController {
                 });
     }
 
-    @EventMapping
+   // @EventMapping
     public void handleAudioMessageEvent(MessageEvent<AudioMessageContent> event) throws IOException {
         handleHeavyContent(
                 event.getReplyToken(),
@@ -148,7 +151,7 @@ public class KitchenSinkController {
                 });
     }
 
-    @EventMapping
+    //@EventMapping
     public void handleVideoMessageEvent(MessageEvent<VideoMessageContent> event) throws IOException {
         // You need to install ffmpeg and ImageMagick.
         handleHeavyContent(
@@ -165,36 +168,36 @@ public class KitchenSinkController {
                 });
     }
 
-    @EventMapping
+    //@EventMapping
     public void handleUnfollowEvent(UnfollowEvent event) {
         log.info("unfollowed this bot: {}", event);
     }
 
-    @EventMapping
+    //@EventMapping
     public void handleFollowEvent(FollowEvent event) {
         String replyToken = event.getReplyToken();
         this.replyText(replyToken, "Got followed event");
     }
 
-    @EventMapping
+    //@EventMapping
     public void handleJoinEvent(JoinEvent event) {
         String replyToken = event.getReplyToken();
         this.replyText(replyToken, "Joined " + event.getSource());
     }
 
-    @EventMapping
+    //@EventMapping
     public void handlePostbackEvent(PostbackEvent event) {
         String replyToken = event.getReplyToken();
         this.replyText(replyToken, "Got postback " + event.getPostbackContent().getData());
     }
 
-    @EventMapping
+    //@EventMapping
     public void handleBeaconEvent(BeaconEvent event) {
         String replyToken = event.getReplyToken();
         this.replyText(replyToken, "Got beacon message " + event.getBeacon().getHwid());
     }
 
-    @EventMapping
+   // @EventMapping
     public void handleOtherEvent(Event event) {
         log.info("Received message(Ignored): {}", event);
     }
