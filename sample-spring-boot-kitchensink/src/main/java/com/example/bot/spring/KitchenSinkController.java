@@ -307,7 +307,7 @@ public class KitchenSinkController {
             message = message.substring(0, 1000 - 2) + "……";
         }
         InputStream credentialStream = new ByteArrayInputStream(googleServiceKey.getBytes());
-      Translate translate = com.google.cloud.translate.TranslateOptions.newBuilder().setCredentials(ServiceAccountCredentials.fromStream(credentialStream)).build().getService();
+      Translate translate = com.google.cloud.translate.TranslateOptions.newBuilder().setCredentials(com.google.auth.oauth2.ServiceAccountCredentials.fromStream(credentialStream)).build().getService();
 
     // The text to translate
     
