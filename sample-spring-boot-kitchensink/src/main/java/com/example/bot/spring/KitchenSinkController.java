@@ -204,7 +204,7 @@ public class KitchenSinkController {
             log.info(">> : "+words);
               this.reply(
                         ((MessageEvent) event).getReplyToken(),
-                        "TEXT DETECTION : "+words
+                       new TextMessage( "TEXT DETECTION : "+words)
                 );
         }else{
             for(EntityAnnotation e :  label.getLabelAnnotations()){
@@ -213,7 +213,7 @@ public class KitchenSinkController {
            log.info(">> : "+words);
                   this.reply(
                         ((MessageEvent) event).getReplyToken(),
-                        "LABEL DETECTION : "+words
+                        new TextMessage("LABEL DETECTION : "+words)
                 );
         }
             
