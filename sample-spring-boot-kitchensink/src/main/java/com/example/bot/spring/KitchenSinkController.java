@@ -183,33 +183,34 @@ public class KitchenSinkController {
 
                 try{
         ImmutableList.Builder<AnnotateImageRequest> requests = ImmutableList.builder();
+        String base64img = getStringImage(responseBody.getStream());
         requests.add(
                 new AnnotateImageRequest()
                 .setFeatures(ImmutableList.of(new Feature().setMaxResults(1).setType("TEXT_DETECTION")))
-                .setImage(new Image().setContent(getStringImage(responseBody.getStream())))
+                .setImage(new Image().setContent(base64img))
         );
          requests.add(
                 new AnnotateImageRequest()
                 .setFeatures(ImmutableList.of(new Feature().setMaxResults(1).setType("LABEL_DETECTION")))
-                .setImage(new Image().setContent(getStringImage(responseBody.getStream())))
+                .setImage(new Image().setContent(base64img))
         );
         Vision.Images.Annotate annotate = getVisionService().images().annotate(new BatchAnnotateImagesRequest().setRequests(requests.build()));
         annotate.setDisableGZipContent(true);
         BatchAnnotateImagesResponse batchResponse = annotate.execute();
-        AnnotateImageResponse text = batchResponse.getResponses().get(0);
-        AnnotateImageResponse label = batchResponse.getResponses().get(1);
+        AnnotateImageResponse textResponse = batchResponse.getResponses().get(0);
+        AnnotateImageResponse labelResponse = batchResponse.getResponses().get(1);
         String words="";
-        if(text.getFullTextAnnotation()!=null){
-            words = text.getFullTextAnnotation().getText();
+        if(textResponse.getFullTextAnnotation()!=null){
+            words = textResponse.getFullTextAnnotation().getText();
             log.info(">> : "+words);
               this.reply(
                         ((MessageEvent) event).getReplyToken(),
                        new TextMessage( "TEXT DETECTION : "+words)
                 );
         }else{
-            if(label!=null){
-            for(EntityAnnotation e :  label.getLabelAnnotations()){
-                 words+="\r\n" + e.getDescription();
+            if(labelResponse!=null && labelResponse.size()>0){
+            for(EntityAnnotation ea :  labelResponse.getLabelAnnotations()){
+                 words+= ea.getDescription();
             }
            log.info(">> : "+words);
                   this.reply(
