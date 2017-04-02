@@ -83,18 +83,10 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 
-import com.google.cloud.translate.Detection;
-import com.google.cloud.translate.Translate;
-import com.google.cloud.translate.Translate.TranslateOption;
-import com.google.cloud.translate.TranslateOptions;
-import com.google.cloud.translate.Translation;
 
-import java.util.List;
 
-import com.google.common.collect.ImmutableList;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.vision.v1.Vision;
@@ -106,16 +98,29 @@ import com.google.api.services.vision.v1.model.BatchAnnotateImagesResponse;
 import com.google.api.services.vision.v1.model.EntityAnnotation;
 import com.google.api.services.vision.v1.model.Feature;
 import com.google.api.services.vision.v1.model.Image;
+import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.cloud.translate.Detection;
+import com.google.cloud.translate.Translate;
+import com.google.cloud.translate.Translate.TranslateOption;
+import com.google.cloud.translate.TranslateOptions;
+import com.google.cloud.translate.Translation;
 import com.google.common.collect.ImmutableList;
+
+
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.security.GeneralSecurityException;
 import java.util.Base64;
+import java.util.List;
+
 import org.apache.commons.io.IOUtils;
+
 @Slf4j
 @LineMessageHandler
 public class KitchenSinkController {
@@ -307,8 +312,8 @@ public class KitchenSinkController {
             message = message.substring(0, 1000 - 2) + "……";
         }
         InputStream credentialStream = new ByteArrayInputStream(googleServiceKey.getBytes());
-      Translate translate = com.google.cloud.translate.TranslateOptions.newBuilder().setCredentials(com.google.auth.oauth2.ServiceAccountCredentials.fromStream(credentialStream)).build().getService();
-
+    
+Translate translate = TranslateOptions.newBuilder().setCredentials(ServiceAccountCredentials.fromStream(credentialStream)).build().getService();
     // The text to translate
     
     List<Detection> detections = translate.detect(ImmutableList.of(message));
