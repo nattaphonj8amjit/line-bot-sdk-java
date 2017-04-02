@@ -111,7 +111,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.util.Base64;
-
+import org.apache.commons.io.IOUtils;
 @Slf4j
 @LineMessageHandler
 public class KitchenSinkController {
