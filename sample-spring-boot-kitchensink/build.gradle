@@ -17,9 +17,7 @@
 apply plugin: 'org.springframework.boot'
 
 dependencies {
-    compile project(':line-bot-spring-boot')
-    compile group: 'com.google.cloud', name: 'google-cloud-translate', version: '0.9.4-alpha'
-    
+    compile project(':line-bot-spring-boot')    
     compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.25'
     compile group: 'org.slf4j', name: 'slf4j-log4j12', version:'1.7.25'
     compile group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.25'
