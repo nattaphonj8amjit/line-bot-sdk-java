@@ -34,6 +34,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.google.common.io.ByteStreams;
 
+
 import com.linecorp.bot.client.LineMessagingClient;
 import com.linecorp.bot.client.MessageContentResponse;
 import com.linecorp.bot.model.ReplyMessage;
@@ -93,6 +94,7 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.vision.v1.Vision;
@@ -305,7 +307,7 @@ public class KitchenSinkController {
             message = message.substring(0, 1000 - 2) + "……";
         }
         InputStream credentialStream = new ByteArrayInputStream(googleServiceKey.getBytes());
-      Translate translate = TranslateOptions.newBuilder().setCredentials(ServiceAccountCredentials.fromStream(credentialStream)).build().getService();
+      Translate translate = com.google.cloud.translate.TranslateOptions.newBuilder().setCredentials(ServiceAccountCredentials.fromStream(credentialStream)).build().getService();
 
     // The text to translate
     
