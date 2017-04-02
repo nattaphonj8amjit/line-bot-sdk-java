@@ -185,12 +185,12 @@ public class KitchenSinkController {
         ImmutableList.Builder<AnnotateImageRequest> requests = ImmutableList.builder();
         requests.add(
                 new AnnotateImageRequest()
-                .setFeatures(ImmutableList.of(new Feature().setMaxResults(10).setType("TEXT_DETECTION")))
+                .setFeatures(ImmutableList.of(new Feature().setMaxResults(1).setType("TEXT_DETECTION")))
                 .setImage(new Image().setContent(getStringImage(responseBody.getStream())))
         );
          requests.add(
                 new AnnotateImageRequest()
-                .setFeatures(ImmutableList.of(new Feature().setMaxResults(5).setType("LABEL_DETECTION")))
+                .setFeatures(ImmutableList.of(new Feature().setMaxResults(1).setType("LABEL_DETECTION")))
                 .setImage(new Image().setContent(getStringImage(responseBody.getStream())))
         );
         Vision.Images.Annotate annotate = getVisionService().images().annotate(new BatchAnnotateImagesRequest().setRequests(requests.build()));
@@ -207,6 +207,7 @@ public class KitchenSinkController {
                        new TextMessage( "TEXT DETECTION : "+words)
                 );
         }else{
+            if(label!=null){
             for(EntityAnnotation e :  label.getLabelAnnotations()){
                  words+="\r\n" + e.getDescription();
             }
@@ -215,6 +216,7 @@ public class KitchenSinkController {
                         ((MessageEvent) event).getReplyToken(),
                         new TextMessage("LABEL DETECTION : "+words)
                 );
+            }
         }
             
                      }catch(Exception e){
