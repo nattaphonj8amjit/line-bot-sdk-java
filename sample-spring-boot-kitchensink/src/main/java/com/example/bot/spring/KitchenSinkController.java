@@ -175,13 +175,13 @@ public class KitchenSinkController {
     }
     
     @EventMapping
-    public void handleImageMessageEvent(MessageEvent<ImageMessageContent> event) throws IOException {
+    public void handleImageMessageEvent(MessageEvent<ImageMessageContent> event) throws Exception {
          handleHeavyContent(
                 event.getReplyToken(),
                 event.getMessage().getId(),
                 responseBody -> {
 
-                
+                try{
         ImmutableList.Builder<AnnotateImageRequest> requests = ImmutableList.builder();
         requests.add(
                 new AnnotateImageRequest()
@@ -213,6 +213,9 @@ public class KitchenSinkController {
                         words
                 );
             });
+                }catch(Exception e){
+  e.printStackTrace();
+}
     }
 
    private String getStringImage(InputStream fin){
