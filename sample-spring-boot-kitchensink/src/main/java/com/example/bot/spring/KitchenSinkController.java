@@ -212,10 +212,11 @@ public class KitchenSinkController {
                         ((MessageEvent) event).getReplyToken(),
                         words
                 );
-            });
-                }catch(Exception e){
+                     }catch(Exception e){
   e.printStackTrace();
 }
+            });
+               
     }
 
    private String getStringImage(InputStream fin){
