@@ -4,17 +4,16 @@ apply plugin: 'org.springframework.boot'
 
 dependencies {
     compile project(':line-bot-spring-boot')    
-    compile group: 'com.google.cloud', name: 'google-cloud-translate', version:'0.9.4-alpha'
     compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.25'
     compile group: 'org.slf4j', name: 'slf4j-log4j12', version:'1.7.25'
     compile group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.25'
-    compile group: 'com.google.cloud', name: 'google-cloud-vision', version:'0.10.0-beta'
-    compile group: 'com.google.apis', name: 'google-api-services-vision', version:'v1-rev347-1.22.0'
     compile(group: 'com.google.api-client', name: 'google-api-client', version:'1.22.0') {
-exclude(module: 'guava-jdk5')
+        exclude(module: 'guava-jdk5')
     }
     compile group: 'com.google.guava', name: 'guava', version:'19.0'
     compile group: 'org.apache.opennlp', name: 'opennlp-tools', version:'1.7.2'
     compile group: 'commons-io', name: 'commons-io', version:'2.5'
-    
+    compile group: 'com.google.apis', name: 'google-api-services-translate', version:'v2-rev48-1.22.0'
+    compile group: 'com.google.apis', name: 'google-api-services-vision', version:'v1-rev349-1.22.0'
+    compile group: 'com.google.cloud', name: 'google-cloud-translate', version:'0.9.4-alpha' 
 }
