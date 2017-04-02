@@ -81,13 +81,15 @@ import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+
+import com.google.cloud.translate.Detection;
 import com.google.cloud.translate.Translate;
 import com.google.cloud.translate.Translate.TranslateOption;
 import com.google.cloud.translate.TranslateOptions;
 import com.google.cloud.translate.Translation;
 
 import java.util.List;
-import com.google.cloud.translate.Detection;
+
 import com.google.common.collect.ImmutableList;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
