@@ -90,6 +90,28 @@ import java.util.List;
 import com.google.cloud.translate.Detection;
 import com.google.common.collect.ImmutableList;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.vision.v1.Vision;
+import com.google.api.services.vision.v1.VisionScopes;
+import com.google.api.services.vision.v1.model.AnnotateImageRequest;
+import com.google.api.services.vision.v1.model.AnnotateImageResponse;
+import com.google.api.services.vision.v1.model.BatchAnnotateImagesRequest;
+import com.google.api.services.vision.v1.model.BatchAnnotateImagesResponse;
+import com.google.api.services.vision.v1.model.EntityAnnotation;
+import com.google.api.services.vision.v1.model.Feature;
+import com.google.api.services.vision.v1.model.Image;
+import com.google.common.collect.ImmutableList;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.GeneralSecurityException;
+import java.util.Base64;
+
 @Slf4j
 @LineMessageHandler
 public class KitchenSinkController {
@@ -107,6 +129,9 @@ public class KitchenSinkController {
         handleSticker(event.getReplyToken(), event.getMessage());
     }
 
+    
+    
+    
     //@EventMapping
     public void handleLocationMessageEvent(MessageEvent<LocationMessageContent> event) {
         LocationMessageContent locationMessage = event.getMessage();
@@ -118,25 +143,75 @@ public class KitchenSinkController {
         ));
     }
 
-    //@EventMapping
+    
+   public String googleServiceKey = "{\n" +
+"  \"type\": \"service_account\",\n" +
+"  \"project_id\": \"skilled-mile-162716\",\n" +
+"  \"private_key_id\": \"5101273c0f15f0a17b666350effb51d5c423604e\",\n" +
+"  \"private_key\": \"-----BEGIN PRIVATE KEY-----\\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDZLJ8YHCAqYX+/\\n5lG2XUWt0V6kIAiyeWbDQw6Z+TLJkVKY5eGanMLfaUk0pMfWTDHCJqs4fOiT2vAG\\nptMW0rPsvpa3M9kk5+Gm8wvI0JfPvLl/ZjKanJs6RYSZ3Ya1k/Bc3Rbo2EM2Vxrw\\nCkcE8ond8CNrYWgK2Zsm3+76JwPovL231OQc+r73Z2SbZvR7oH8pvmLLJylcKEpv\\n+Z3v3oLU7X+RJXU3JJ4jX54wCvDpZYMWtnT8hJooYowWfKsWxB0b/IjdDezCrsZY\\nOgXvPcQmGgAXncnPvZBfbFQdg5T0IlI1JLedWZV5AGg1glPZLaeo1pyFR5apKEaX\\n+CAjYCJbAgMBAAECggEAV7SYj6EUMGltsS8vwslKUZcjdH7nZER5BtR2+iHUq+i/\\nhbYY9VrnrFgV02fUuKvO0IzTSx3Ow5+Anf8Tcr0nIq4ZqeULhccLr2OqV7A+Dww1\\nkcjRGPW0DsVydr0rIPuc77PuA50LD8//tf9AjTPyD6pic4REA1W8Pefj2CyXfI62\\nNx1+SGd6t7YLzswp3Jxf5w42RFBzpxB0/hKNEoii0Qf1L2n4W3uEAwJGEqG0Pj5x\\nkDvgl1pJiwdubn3AV78/sM1Fmgvk9wQdJDsyIvQLxmGRGn6G6oXROj0KLEpvrFZE\\ng/KP66kgnUoBnqHux0bS082mxKNjNjbL5JNBEBNoUQKBgQDzi0ZhqMLR8lFpnsjU\\nfc3A+og+2P++SrZI0+Nr0hQzqn4RELdktXlLW+YRc1hO4S2ZACdh1U8ZT//v5KMi\\noL6BvgQmMpEvDvPOz8fgh3jPewjqkLshzA6IOKoJ+Bu6xGwtEUnnYuodlXiaceb6\\nGfm2je2pVFnbgfa3SbVapm2JcwKBgQDkSBZTbXqlIfDkLkQ5HOrysRxrF1Zlwz4k\\nZ+2AouK4E3miSz1iqOHo497KSxZxob38V9Vz+0ctAuVPIqIclt+XDXyEN23Td0Rr\\nkdgecJREc7BV+UFzpbzxdZilWBy/DDlVZMjzH8wPS/8OUkKStyZNfXKuAtt9hjcj\\nxhdOnF5peQKBgQDHggWDBROrlz0YMApHAFPoTZQFIBDJGz0ehe2cqvj/piAl7LK/\\nnmYh1MOw8fOakp6e4uBgJbTpgH6iT4NQX6wQbs/JVs1WZoJVniMYDQJrvVd9iFi0\\nBAy3jOvGxOg6ZKRVev82vPIakBK/OqXDpjnJUZUqjL4bsuigF5KoEwRSfwKBgQCv\\nfGsNPz/k6a6Q+rAfZ4eFgXljKdGU8P44ZlxBYvX+o5oBlO1fhowDyAhgYlCikb/G\\n2I6SVjxk8bDtoKYWbDT9nbR2v1WCFlFWkAsfe1O/O1/292HFUUdqJwhtMssGYpNA\\nffWsUGlB6R3tGHds6bZcI2+hLTklyaNhsMoB+FrroQKBgQDqtgLF1qwGnWRHa/G0\\nrSIKo2c0Z47dxlhcFT13odCR3we5S4AhmJ9ADSn+4h4yhuQYh+aPO2MQ3dnsaFSd\\nhSzotaAD6dftohUMZLEE3TAdvRg8Z2UYFJKFx7siur8VUxzlubncO6CS4wMRlK1R\\nlaPSGZC++65HMbvK4zayoil1UQ==\\n-----END PRIVATE KEY-----\\n\",\n" +
+"  \"client_email\": \"vision-api@skilled-mile-162716.iam.gserviceaccount.com\",\n" +
+"  \"client_id\": \"107621297260006636867\",\n" +
+"  \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\n" +
+"  \"token_uri\": \"https://accounts.google.com/o/oauth2/token\",\n" +
+"  \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",\n" +
+"  \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/vision-api%40skilled-mile-162716.iam.gserviceaccount.com\"\n" +
+"}";
+    
+    public Vision getVisionService() throws IOException, GeneralSecurityException {
+        InputStream credentialStream = new ByteArrayInputStream(googleServiceKey.getBytes());
+        GoogleCredential credential = GoogleCredential.fromStream(credentialStream).createScoped(VisionScopes.all());
+        return new Vision.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance(), credential)
+                .setApplicationName("API key 1")
+                .build();
+    }
+    
+    @EventMapping
     public void handleImageMessageEvent(MessageEvent<ImageMessageContent> event) throws IOException {
-        // You need to install ImageMagick
-        handleHeavyContent(
-                event.getReplyToken(),
-                event.getMessage().getId(),
-                responseBody -> {
-                    DownloadedContent jpg = saveContent("jpg", responseBody);
-                    DownloadedContent previewImg = createTempFile("jpg");
-                    system(
-                            "convert",
-                            "-resize", "240x",
-                            jpg.path.toString(),
-                            previewImg.path.toString());
-                    reply(((MessageEvent) event).getReplyToken(),
-                          new ImageMessage(jpg.getUri(), jpg.getUri()));
-                });
+        ImmutableList.Builder<AnnotateImageRequest> requests = ImmutableList.builder();
+        requests.add(
+                new AnnotateImageRequest()
+                .setFeatures(ImmutableList.of(new Feature().setMaxResults(10).setType("TEXT_DETECTION")))
+                .setImage(new Image().setContent(getStringImage(responseBody.getStream())))
+        );
+         requests.add(
+                new AnnotateImageRequest()
+                .setFeatures(ImmutableList.of(new Feature().setMaxResults(5).setType("LABEL_DETECTION")))
+                .setImage(new Image().setContent(getStringImage(responseBody.getStream())))
+        );
+        Vision.Images.Annotate annotate = getVisionService().images().annotate(new BatchAnnotateImagesRequest().setRequests(requests.build()));
+        annotate.setDisableGZipContent(true);
+        BatchAnnotateImagesResponse batchResponse = annotate.execute();
+        AnnotateImageResponse text = batchResponse.getResponses().get(0);
+        AnnotateImageResponse label = batchResponse.getResponses().get(1);
+        String words="";
+        if(text.getFullTextAnnotation()!=null){
+            words = text.getFullTextAnnotation().getText();
+            log.info(">> : "+words);
+        }else{
+            for(EntityAnnotation e :  label.getLabelAnnotations()){
+                 words+="\r\n" + e.getDescription();
+            }
+           log.info(">> : "+words);
+        }
+              this.replyText(
+                        ((MessageEvent) event).getReplyToken(),
+                        words
+                );
+            
     }
 
+   private String getStringImage(InputStream fin){
+    try {
+        byte[] bytes = IOUtils.toByteArray(fin);
+        fin.read(bytes, 0, bytes.length);
+        fin.close();
+        return Base64.getEncoder().encodeToString(bytes);
+    } catch (Exception ex) {
+    }
+    return null;
+}
+    
+    
    // @EventMapping
     public void handleAudioMessageEvent(MessageEvent<AudioMessageContent> event) throws IOException {
         handleHeavyContent(
