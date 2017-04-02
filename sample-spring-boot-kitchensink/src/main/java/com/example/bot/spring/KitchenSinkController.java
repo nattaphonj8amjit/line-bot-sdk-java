@@ -202,16 +202,21 @@ public class KitchenSinkController {
         if(text.getFullTextAnnotation()!=null){
             words = text.getFullTextAnnotation().getText();
             log.info(">> : "+words);
+              this.reply(
+                        ((MessageEvent) event).getReplyToken(),
+                        "TEXT DETECTION : "+words
+                );
         }else{
             for(EntityAnnotation e :  label.getLabelAnnotations()){
                  words+="\r\n" + e.getDescription();
             }
            log.info(">> : "+words);
-        }
-              this.replyText(
+                  this.reply(
                         ((MessageEvent) event).getReplyToken(),
-                        words
+                        "LABEL DETECTION : "+words
                 );
+        }
+            
                      }catch(Exception e){
   e.printStackTrace();
 }
