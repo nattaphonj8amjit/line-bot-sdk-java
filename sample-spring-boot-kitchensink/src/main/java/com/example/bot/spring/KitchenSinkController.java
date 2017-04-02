@@ -304,11 +304,8 @@ public class KitchenSinkController {
         if (message.length() > 1000) {
             message = message.substring(0, 1000 - 2) + "……";
         }
-        
-         Translate translate = TranslateOptions.newBuilder()
-            .setApiKey("AIzaSyCSy4Byxmjp1Beu5-OxhE9V0xYqfqPECI4")
-            .build()
-            .getService();
+        InputStream credentialStream = new ByteArrayInputStream(googleServiceKey.getBytes());
+      Translate translate = TranslateOptions.newBuilder().setCredentials(ServiceAccountCredentials.fromStream(credentialStream)).build().getService();
 
     // The text to translate
     
