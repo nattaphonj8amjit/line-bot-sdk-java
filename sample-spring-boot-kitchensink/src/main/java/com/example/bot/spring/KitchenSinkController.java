@@ -299,10 +299,10 @@ public class KitchenSinkController {
 			Translation translation = null;
 			if ("en".equalsIgnoreCase(language)) {
 				translation = translate.translate(message, TranslateOption.sourceLanguage(language),
-						TranslateOption.targetLanguage("th"));
+						TranslateOption.targetLanguage("th"),TranslateOption.model("nmt"));
 			} else {
 				translation = translate.translate(message, TranslateOption.sourceLanguage(language),
-						TranslateOption.targetLanguage("en"));
+						TranslateOption.targetLanguage("en"),TranslateOption.model("nmt"));
 			}
 
 			this.reply(replyToken, new TextMessage(message + " : " + translation.getTranslatedText()));
