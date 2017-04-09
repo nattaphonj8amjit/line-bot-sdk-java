@@ -31,6 +31,7 @@ import java.util.function.Consumer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.core.io.ClassPathResource;
 
 import com.google.common.io.ByteStreams;
 
@@ -138,12 +139,10 @@ public class KitchenSinkController {
 				locationMessage.getLatitude(), locationMessage.getLongitude()));
 	}
 
-	
-	
 	public Vision getVisionService() throws Exception {
-		GoogleCredential credential = GoogleCredential.fromStream(new ClassPathResource("static/datastoreowner.json").getInputStream()).createScoped(VisionScopes.all());
-		return new Vision.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance(),
-				credential).setApplicationName("API key 1").build();
+		GoogleCredential credential = GoogleCredential
+				.fromStream(new ClassPathResource("static/datastoreowner.json").getInputStream()).createScoped(VisionScopes.all());
+		return new Vision.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance(), credential).build();
 	}
 
 	@EventMapping
@@ -272,10 +271,12 @@ public class KitchenSinkController {
 		if (message.length() > 1000) {
 			message = message.substring(0, 1000 - 2) + "……";
 		}
-	
+
 		try {
 			Translate translate = TranslateOptions.newBuilder()
-					.setCredentials(ServiceAccountCredentials.fromStream(new ClassPathResource("static/datastoreowner.json").getInputStream())).build().getService();
+					.setCredentials(ServiceAccountCredentials
+							.fromStream(new ClassPathResource("static/datastoreowner.json").getInputStream()))
+					.build().getService();
 			// The text to translate
 
 			List<Detection> detections = translate.detect(ImmutableList.of(message));
@@ -288,10 +289,10 @@ public class KitchenSinkController {
 			Translation translation = null;
 			if ("en".equalsIgnoreCase(language)) {
 				translation = translate.translate(message, TranslateOption.sourceLanguage(language),
-						TranslateOption.targetLanguage("th"),TranslateOption.model("nmt"));
+						TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
 			} else {
 				translation = translate.translate(message, TranslateOption.sourceLanguage(language),
-						TranslateOption.targetLanguage("en"),TranslateOption.model("nmt"));
+						TranslateOption.targetLanguage("en"), TranslateOption.model("nmt"));
 			}
 
 			this.reply(replyToken, new TextMessage(message + " : " + translation.getTranslatedText()));
