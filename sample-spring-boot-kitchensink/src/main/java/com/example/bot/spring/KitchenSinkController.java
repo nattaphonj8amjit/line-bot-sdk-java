@@ -265,7 +265,7 @@ public class KitchenSinkController {
 		}
 	}
 
-	private Translate getTranslateService() {
+	private Translate getTranslateService() throws Exception{
 		return TranslateOptions.newBuilder()
 				.setCredentials(ServiceAccountCredentials
 						.fromStream(new ClassPathResource("static/datastoreowner.json").getInputStream()))
