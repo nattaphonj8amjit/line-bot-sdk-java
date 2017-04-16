@@ -177,7 +177,7 @@ public class KitchenSinkController {
 						language = detection.getLanguage();
 						translation = translate.translate(words, TranslateOption.sourceLanguage(language),
 								TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
-						this.reply(replyToken, new TextMessage(words + " : " + translation.getTranslatedText()));
+						this.reply(((MessageEvent) event).getReplyToken(), new TextMessage(words + " : " + translation.getTranslatedText()));
 					}
 				}
 			} catch (Exception e) {
