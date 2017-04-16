@@ -175,9 +175,12 @@ public class KitchenSinkController {
 					Translation translation = null;
 					for (Detection detection : detections) {
 						language = detection.getLanguage();
-						translation = translate.translate(words, TranslateOption.sourceLanguage(language),
-								TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
-						this.reply(((MessageEvent) event).getReplyToken(), new TextMessage(words + " : " + translation.getTranslatedText()));
+						if ("ja".equalsIgnoreCase(language)) {
+							translation = translate.translate(words, TranslateOption.sourceLanguage(language),
+									TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
+							this.reply(((MessageEvent) event).getReplyToken(),
+									new TextMessage(words + " : " + translation.getTranslatedText()));
+						}
 					}
 				}
 			} catch (Exception e) {
@@ -265,7 +268,7 @@ public class KitchenSinkController {
 		}
 	}
 
-	private Translate getTranslateService() throws Exception{
+	private Translate getTranslateService() throws Exception {
 		return TranslateOptions.newBuilder()
 				.setCredentials(ServiceAccountCredentials
 						.fromStream(new ClassPathResource("static/datastoreowner.json").getInputStream()))
