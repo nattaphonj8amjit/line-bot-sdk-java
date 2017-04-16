@@ -175,13 +175,14 @@ public class KitchenSinkController {
 					Translation translation = null;
 					for (Detection detection : detections) {
 						language = detection.getLanguage();
-						if ("ja".equalsIgnoreCase(language)) {
-							translation = translate.translate(words, TranslateOption.sourceLanguage(language),
-									TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
-							this.reply(((MessageEvent) event).getReplyToken(),
-									new TextMessage(words + " : " + translation.getTranslatedText()));
-						}
 					}
+					if ("ja".equalsIgnoreCase(language)) {
+						translation = translate.translate(words, TranslateOption.sourceLanguage(language),
+								TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
+						this.reply(((MessageEvent) event).getReplyToken(),
+								new TextMessage(words + " : " + translation.getTranslatedText()));
+					}
+					
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
