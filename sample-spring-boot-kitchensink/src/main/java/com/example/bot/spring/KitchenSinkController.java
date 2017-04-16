@@ -157,10 +157,7 @@ public class KitchenSinkController {
 				requests.add(new AnnotateImageRequest()
 						.setFeatures(ImmutableList.of(new Feature().setMaxResults(1).setType("TEXT_DETECTION")))
 						.setImage(new Image().setContent(base64img)));
-				// requests.add(new AnnotateImageRequest()
-				// .setFeatures(ImmutableList.of(new
-				// Feature().setMaxResults(1).setType("LABEL_DETECTION")))
-				// .setImage(new Image().setContent(base64img)));
+
 				Vision.Images.Annotate annotate = getVisionService().images()
 						.annotate(new BatchAnnotateImagesRequest().setRequests(requests.build()));
 				annotate.setDisableGZipContent(true);
@@ -171,7 +168,7 @@ public class KitchenSinkController {
 				String words = "";
 				if (textResponse.getFullTextAnnotation() != null) {
 					words = textResponse.getFullTextAnnotation().getText();
-					log.info(">> : " + words); 
+					log.info(">> : " + words);
 					Translate translate = getTranslateService();
 					List<Detection> detections = translate.detect(ImmutableList.of(words));
 					String language = "";
@@ -181,12 +178,12 @@ public class KitchenSinkController {
 						translation = translate.translate(words, TranslateOption.sourceLanguage(language),
 								TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
 						this.reply(replyToken, new TextMessage(words + " : " + translation.getTranslatedText()));
-					}					
-				} catch (Exception e) {
+					}
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+
 		});
 
 	}
