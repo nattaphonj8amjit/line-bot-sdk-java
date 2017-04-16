@@ -121,7 +121,7 @@ public class KitchenSinkController {
 	@Autowired
 	private LineMessagingClient lineMessagingClient;
 
-	@EventMapping
+	// @EventMapping
 	public void handleTextMessageEvent(MessageEvent<TextMessageContent> event) throws Exception {
 		TextMessageContent message = event.getMessage();
 		handleTextContent(event.getReplyToken(), event, message);
@@ -141,8 +141,10 @@ public class KitchenSinkController {
 
 	public Vision getVisionService() throws Exception {
 		GoogleCredential credential = GoogleCredential
-				.fromStream(new ClassPathResource("static/datastoreowner.json").getInputStream()).createScoped(VisionScopes.all());
-		return new Vision.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance(), credential).build();
+				.fromStream(new ClassPathResource("static/datastoreowner.json").getInputStream())
+				.createScoped(VisionScopes.all());
+		return new Vision.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance(),
+				credential).build();
 	}
 
 	@EventMapping
@@ -155,31 +157,33 @@ public class KitchenSinkController {
 				requests.add(new AnnotateImageRequest()
 						.setFeatures(ImmutableList.of(new Feature().setMaxResults(1).setType("TEXT_DETECTION")))
 						.setImage(new Image().setContent(base64img)));
-				requests.add(new AnnotateImageRequest()
-						.setFeatures(ImmutableList.of(new Feature().setMaxResults(1).setType("LABEL_DETECTION")))
-						.setImage(new Image().setContent(base64img)));
+				// requests.add(new AnnotateImageRequest()
+				// .setFeatures(ImmutableList.of(new
+				// Feature().setMaxResults(1).setType("LABEL_DETECTION")))
+				// .setImage(new Image().setContent(base64img)));
 				Vision.Images.Annotate annotate = getVisionService().images()
 						.annotate(new BatchAnnotateImagesRequest().setRequests(requests.build()));
 				annotate.setDisableGZipContent(true);
 				BatchAnnotateImagesResponse batchResponse = annotate.execute();
 				AnnotateImageResponse textResponse = batchResponse.getResponses().get(0);
-				AnnotateImageResponse labelResponse = batchResponse.getResponses().get(1);
+				// AnnotateImageResponse labelResponse =
+				// batchResponse.getResponses().get(1);
 				String words = "";
 				if (textResponse.getFullTextAnnotation() != null) {
 					words = textResponse.getFullTextAnnotation().getText();
-					log.info(">> : " + words);
-					this.reply(((MessageEvent) event).getReplyToken(), new TextMessage("TEXT DETECTION : " + words));
-				} else {
-					if (labelResponse != null && labelResponse.size() > 0) {
-						for (EntityAnnotation ea : labelResponse.getLabelAnnotations()) {
-							words += ea.getDescription();
-						}
-						log.info(">> : " + words);
-						this.reply(((MessageEvent) event).getReplyToken(),
-								new TextMessage("LABEL DETECTION : " + words));
-					}
+					log.info(">> : " + words); 
+					Translate translate = getTranslateService();
+					List<Detection> detections = translate.detect(ImmutableList.of(words));
+					String language = "";
+					Translation translation = null;
+					for (Detection detection : detections) {
+						language = detection.getLanguage();
+						translation = translate.translate(words, TranslateOption.sourceLanguage(language),
+								TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
+						this.reply(replyToken, new TextMessage(words + " : " + translation.getTranslatedText()));
+					}					
+				} catch (Exception e) {
 				}
-
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -264,6 +268,13 @@ public class KitchenSinkController {
 		}
 	}
 
+	private Translate getTranslateService() {
+		return TranslateOptions.newBuilder()
+				.setCredentials(ServiceAccountCredentials
+						.fromStream(new ClassPathResource("static/datastoreowner.json").getInputStream()))
+				.build().getService();
+	}
+
 	private void replyText(@NonNull String replyToken, @NonNull String message) {
 		if (replyToken.isEmpty()) {
 			throw new IllegalArgumentException("replyToken must not be empty");
@@ -273,28 +284,17 @@ public class KitchenSinkController {
 		}
 
 		try {
-			Translate translate = TranslateOptions.newBuilder()
-					.setCredentials(ServiceAccountCredentials
-							.fromStream(new ClassPathResource("static/datastoreowner.json").getInputStream()))
-					.build().getService();
-			// The text to translate
 
+			// The text to translate
+			Translate translate = getTranslateService();
 			List<Detection> detections = translate.detect(ImmutableList.of(message));
 			String language = "";
 			for (Detection detection : detections) {
-				// System.out.println(detection.getLanguage());
 				language = detection.getLanguage();
 			}
 
 			Translation translation = null;
-//			if ("en".equalsIgnoreCase(language)) {
-//				translation = translate.translate(message, TranslateOption.sourceLanguage(language),
-//						TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
-//			} else {
-//				translation = translate.translate(message, TranslateOption.sourceLanguage(language),
-//						TranslateOption.targetLanguage("en"), TranslateOption.model("nmt"));
-//			}
-			
+
 			if ("ja".equalsIgnoreCase(language)) {
 				translation = translate.translate(message, TranslateOption.sourceLanguage(language),
 						TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
@@ -302,7 +302,6 @@ public class KitchenSinkController {
 				translation = translate.translate(message, TranslateOption.sourceLanguage(language),
 						TranslateOption.targetLanguage("ja"), TranslateOption.model("nmt"));
 			}
-			
 
 			this.reply(replyToken, new TextMessage(message + " : " + translation.getTranslatedText()));
 		} catch (Exception e) {
