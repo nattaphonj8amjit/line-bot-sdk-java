@@ -178,8 +178,11 @@ public class KitchenSinkController {
 					}
 					if ("ja".equalsIgnoreCase(language)) {
 						translation = translate.translate(words, TranslateOption.sourceLanguage("ja"),
-								TranslateOption.targetLanguage("en"), TranslateOption.model("nmt"));
+								TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
 						String jpToTh = translation.getTranslatedText();
+						translation = translate.translate(words, TranslateOption.sourceLanguage("ja"),
+								TranslateOption.targetLanguage("en"), TranslateOption.model("nmt"));
+						String jpToEn = translation.getTranslatedText();
 						translation = translate.translate(translation.getTranslatedText(),
 								TranslateOption.sourceLanguage("en"), TranslateOption.targetLanguage("th"),
 								TranslateOption.model("nmt"));
@@ -187,7 +190,7 @@ public class KitchenSinkController {
 //						this.reply(((MessageEvent) event).getReplyToken(),
 //								new TextMessage(words + " : " + translation.getTranslatedText()));
 						this.reply(((MessageEvent) event).getReplyToken(),
-								new TextMessage("JP > TH : " + jpToTh + "\r\n\r\n"+" JP > EN > TH : "+jpToEnToTh ));
+								new TextMessage("JP > EN : " + jpToEn + "\r\n"+ "JP > TH"+jpToTh+"\r\n"+"JP > EN > TH : "+jpToEnToTh ));
 					}
 
 				}
