@@ -190,7 +190,7 @@ public class KitchenSinkController {
 //						this.reply(((MessageEvent) event).getReplyToken(),
 //								new TextMessage(words + " : " + translation.getTranslatedText()));
 						this.reply(((MessageEvent) event).getReplyToken(),
-								new TextMessage("JP > EN : " + jpToEn + "\r\n"+ "JP > TH"+jpToTh+"\r\n"+"JP > EN > TH : "+jpToEnToTh ));
+								new TextMessage("JP > EN : " + jpToEn + "\r\n"+ "JP > TH : "+jpToTh+"\r\n"+"JP > EN > TH : "+jpToEnToTh ));
 					}
 
 				}
