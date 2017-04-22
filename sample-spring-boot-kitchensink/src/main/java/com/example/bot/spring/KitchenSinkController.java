@@ -177,9 +177,9 @@ public class KitchenSinkController {
 						language = detection.getLanguage();
 					}
 					if ("ja".equalsIgnoreCase(language)) {
-						translation = translate.translate(words, TranslateOption.sourceLanguage("ja"),
-								TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
-						String jpToTh = translation.getTranslatedText();
+//						translation = translate.translate(words, TranslateOption.sourceLanguage("ja"),
+//								TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
+//						String jpToTh = translation.getTranslatedText();
 						translation = translate.translate(words, TranslateOption.sourceLanguage("ja"),
 								TranslateOption.targetLanguage("en"), TranslateOption.model("nmt"));
 						String jpToEn = translation.getTranslatedText();
@@ -187,10 +187,11 @@ public class KitchenSinkController {
 								TranslateOption.sourceLanguage("en"), TranslateOption.targetLanguage("th"),
 								TranslateOption.model("nmt"));
 						String jpToEnToTh = translation.getTranslatedText();
-//						this.reply(((MessageEvent) event).getReplyToken(),
-//								new TextMessage(words + " : " + translation.getTranslatedText()));
-						this.reply(((MessageEvent) event).getReplyToken(),
-								new TextMessage("JP > EN : " + jpToEn + "\r\n"+ "JP > TH : "+jpToTh+"\r\n"+"JP > EN > TH : "+jpToEnToTh ));
+//	this.reply(((MessageEvent) event).getReplyToken(),
+//								new TextMessage("JP > EN : " + jpToEn + "\r\n"+ "JP > TH : "+jpToTh+"\r\n"+"JP > EN > TH : "+jpToEnToTh ));
+	this.reply(((MessageEvent) event).getReplyToken(),
+			new TextMessage(jpToEnToTh ));
+
 					}
 
 				}
