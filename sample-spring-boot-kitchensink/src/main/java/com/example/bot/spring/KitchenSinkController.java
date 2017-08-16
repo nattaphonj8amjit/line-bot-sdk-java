@@ -175,7 +175,7 @@ public class KitchenSinkController {
 	}
 
 	private void handleHeavyContent(String replyToken, String messageId,
-			Consumer<MessageContentResponse> messageConsumer) {
+			Consumer<MessageContentResponse> messageConsumer) throws Exception {
 		final MessageContentResponse response;
 		try {
 			response = lineMessagingClient.getMessageContent(messageId).get();
