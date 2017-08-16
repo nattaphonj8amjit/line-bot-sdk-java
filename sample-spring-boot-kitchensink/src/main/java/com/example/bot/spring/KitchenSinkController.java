@@ -197,11 +197,11 @@ public class KitchenSinkController {
 		return null;
 	}
 
-	private void reply(@NonNull String replyToken, @NonNull Message message) {
+	private void reply(@NonNull String replyToken, @NonNull Message message) throws Exception {
 		reply(replyToken, Collections.singletonList(message));
 	}
 
-	private void reply(@NonNull String replyToken, @NonNull List<Message> messages) {
+	private void reply(@NonNull String replyToken, @NonNull List<Message> messages) throws Exception {
 		try {
 			BotApiResponse apiResponse = lineMessagingClient.replyMessage(new ReplyMessage(replyToken, messages)).get();
 			log.info("Sent messages: {}", apiResponse);
@@ -210,7 +210,7 @@ public class KitchenSinkController {
 		}
 	}
 
-	private void replyText(@NonNull String replyToken, @NonNull String message) {
+	private void replyText(@NonNull String replyToken, @NonNull String message) throws Exception {
 		if (replyToken.isEmpty()) {
 			throw new IllegalArgumentException("replyToken must not be empty");
 		}
