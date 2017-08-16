@@ -121,50 +121,26 @@ public class KitchenSinkController {
 	@Autowired
 	private LineMessagingClient lineMessagingClient;
 
-	// @EventMapping
+	@EventMapping
 	public void handleTextMessageEvent(MessageEvent<TextMessageContent> event) throws Exception {
 		TextMessageContent message = event.getMessage();
 		handleTextContent(event.getReplyToken(), event, message);
 	}
 
-	// @EventMapping
-	public void handleStickerMessageEvent(MessageEvent<StickerMessageContent> event) {
-		handleSticker(event.getReplyToken(), event.getMessage());
-	}
-
-	// @EventMapping
-	public void handleLocationMessageEvent(MessageEvent<LocationMessageContent> event) {
-		LocationMessageContent locationMessage = event.getMessage();
-		reply(event.getReplyToken(), new LocationMessage(locationMessage.getTitle(), locationMessage.getAddress(),
-				locationMessage.getLatitude(), locationMessage.getLongitude()));
-	}
-
-	public Vision getVisionService() throws Exception {
-		GoogleCredential credential = GoogleCredential
-				.fromStream(new ClassPathResource("static/datastoreowner.json").getInputStream())
-				.createScoped(VisionScopes.all());
-		return new Vision.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance(),
-				credential).build();
-	}
-
 	@EventMapping
 	public void handleImageMessageEvent(MessageEvent<ImageMessageContent> event) throws Exception {
 		handleHeavyContent(event.getReplyToken(), event.getMessage().getId(), responseBody -> {
-
 			try {
 				ImmutableList.Builder<AnnotateImageRequest> requests = ImmutableList.builder();
 				String base64img = getStringImage(responseBody.getStream());
 				requests.add(new AnnotateImageRequest()
 						.setFeatures(ImmutableList.of(new Feature().setMaxResults(1).setType("TEXT_DETECTION")))
 						.setImage(new Image().setContent(base64img)));
-
 				Vision.Images.Annotate annotate = getVisionService().images()
 						.annotate(new BatchAnnotateImagesRequest().setRequests(requests.build()));
 				annotate.setDisableGZipContent(true);
 				BatchAnnotateImagesResponse batchResponse = annotate.execute();
 				AnnotateImageResponse textResponse = batchResponse.getResponses().get(0);
-				// AnnotateImageResponse labelResponse =
-				// batchResponse.getResponses().get(1);
 				String words = "";
 				if (textResponse.getFullTextAnnotation() != null) {
 					words = textResponse.getFullTextAnnotation().getText();
@@ -177,23 +153,18 @@ public class KitchenSinkController {
 						language = detection.getLanguage();
 					}
 					if ("ja".equalsIgnoreCase(language)) {
-//						translation = translate.translate(words, TranslateOption.sourceLanguage("ja"),
-//								TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
-//						String jpToTh = translation.getTranslatedText();
 						translation = translate.translate(words, TranslateOption.sourceLanguage("ja"),
 								TranslateOption.targetLanguage("en"), TranslateOption.model("nmt"));
-						String jpToEn = translation.getTranslatedText();
 						translation = translate.translate(translation.getTranslatedText(),
 								TranslateOption.sourceLanguage("en"), TranslateOption.targetLanguage("th"),
 								TranslateOption.model("nmt"));
-						String jpToEnToTh = translation.getTranslatedText();
-//	this.reply(((MessageEvent) event).getReplyToken(),
-//								new TextMessage("JP > EN : " + jpToEn + "\r\n"+ "JP > TH : "+jpToTh+"\r\n"+"JP > EN > TH : "+jpToEnToTh ));
-	this.reply(((MessageEvent) event).getReplyToken(),
-			new TextMessage(jpToEnToTh ));
-
+						this.reply(((MessageEvent) event).getReplyToken(), new TextMessage(translation.getTranslatedText()));
+					} else if ("en".equalsIgnoreCase(language)) {
+						translation = translate.translate(translation.getTranslatedText(),
+								TranslateOption.sourceLanguage("en"), TranslateOption.targetLanguage("th"),
+								TranslateOption.model("nmt"));
+						this.reply(((MessageEvent) event).getReplyToken(), new TextMessage(translation.getTranslatedText()));
 					}
-
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -201,6 +172,18 @@ public class KitchenSinkController {
 
 		});
 
+	}
+
+	private void handleHeavyContent(String replyToken, String messageId,
+			Consumer<MessageContentResponse> messageConsumer) {
+		final MessageContentResponse response;
+		try {
+			response = lineMessagingClient.getMessageContent(messageId).get();
+		} catch (InterruptedException | ExecutionException e) {
+			reply(replyToken, new TextMessage("Cannot get image: " + e.getMessage()));
+			throw new RuntimeException(e);
+		}
+		messageConsumer.accept(response);
 	}
 
 	private String getStringImage(InputStream fin) {
@@ -212,59 +195,6 @@ public class KitchenSinkController {
 		} catch (Exception ex) {
 		}
 		return null;
-	}
-
-	// @EventMapping
-	public void handleAudioMessageEvent(MessageEvent<AudioMessageContent> event) throws IOException {
-		handleHeavyContent(event.getReplyToken(), event.getMessage().getId(), responseBody -> {
-			DownloadedContent mp4 = saveContent("mp4", responseBody);
-			reply(event.getReplyToken(), new AudioMessage(mp4.getUri(), 100));
-		});
-	}
-
-	// @EventMapping
-	public void handleVideoMessageEvent(MessageEvent<VideoMessageContent> event) throws IOException {
-		// You need to install ffmpeg and ImageMagick.
-		handleHeavyContent(event.getReplyToken(), event.getMessage().getId(), responseBody -> {
-			DownloadedContent mp4 = saveContent("mp4", responseBody);
-			DownloadedContent previewImg = createTempFile("jpg");
-			system("convert", mp4.path + "[0]", previewImg.path.toString());
-			reply(((MessageEvent) event).getReplyToken(), new VideoMessage(mp4.getUri(), previewImg.uri));
-		});
-	}
-
-	// @EventMapping
-	public void handleUnfollowEvent(UnfollowEvent event) {
-		log.info("unfollowed this bot: {}", event);
-	}
-
-	// @EventMapping
-	public void handleFollowEvent(FollowEvent event) {
-		String replyToken = event.getReplyToken();
-		this.replyText(replyToken, "Got followed event");
-	}
-
-	// @EventMapping
-	public void handleJoinEvent(JoinEvent event) {
-		String replyToken = event.getReplyToken();
-		this.replyText(replyToken, "Joined " + event.getSource());
-	}
-
-	// @EventMapping
-	public void handlePostbackEvent(PostbackEvent event) {
-		String replyToken = event.getReplyToken();
-		this.replyText(replyToken, "Got postback " + event.getPostbackContent().getData());
-	}
-
-	// @EventMapping
-	public void handleBeaconEvent(BeaconEvent event) {
-		String replyToken = event.getReplyToken();
-		this.replyText(replyToken, "Got beacon message " + event.getBeacon().getHwid());
-	}
-
-	// @EventMapping
-	public void handleOtherEvent(Event event) {
-		log.info("Received message(Ignored): {}", event);
 	}
 
 	private void reply(@NonNull String replyToken, @NonNull Message message) {
@@ -280,13 +210,6 @@ public class KitchenSinkController {
 		}
 	}
 
-	private Translate getTranslateService() throws Exception {
-		return TranslateOptions.newBuilder()
-				.setCredentials(ServiceAccountCredentials
-						.fromStream(new ClassPathResource("static/datastoreowner.json").getInputStream()))
-				.build().getService();
-	}
-
 	private void replyText(@NonNull String replyToken, @NonNull String message) {
 		if (replyToken.isEmpty()) {
 			throw new IllegalArgumentException("replyToken must not be empty");
@@ -294,176 +217,43 @@ public class KitchenSinkController {
 		if (message.length() > 1000) {
 			message = message.substring(0, 1000 - 2) + "……";
 		}
-
-		try {
-
-			// The text to translate
-			Translate translate = getTranslateService();
-			List<Detection> detections = translate.detect(ImmutableList.of(message));
-			String language = "";
-			for (Detection detection : detections) {
-				language = detection.getLanguage();
-			}
-
-			Translation translation = null;
-
-			if ("ja".equalsIgnoreCase(language)) {
-				translation = translate.translate(message, TranslateOption.sourceLanguage(language),
-						TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
-			} else {
-				translation = translate.translate(message, TranslateOption.sourceLanguage(language),
-						TranslateOption.targetLanguage("ja"), TranslateOption.model("nmt"));
-			}
-
-			this.reply(replyToken, new TextMessage(message + " : " + translation.getTranslatedText()));
-		} catch (Exception e) {
+		// The text to translate
+		Translate translate = getTranslateService();
+		List<Detection> detections = translate.detect(ImmutableList.of(message));
+		String language = "";
+		for (Detection detection : detections) {
+			language = detection.getLanguage();
 		}
-	}
-
-	private void handleHeavyContent(String replyToken, String messageId,
-			Consumer<MessageContentResponse> messageConsumer) {
-		final MessageContentResponse response;
-		try {
-			response = lineMessagingClient.getMessageContent(messageId).get();
-		} catch (InterruptedException | ExecutionException e) {
-			reply(replyToken, new TextMessage("Cannot get image: " + e.getMessage()));
-			throw new RuntimeException(e);
+		Translation translation = null;
+		if ("en".equalsIgnoreCase(language)) {
+			translation = translate.translate(message, TranslateOption.sourceLanguage(language),
+					TranslateOption.targetLanguage("th"), TranslateOption.model("nmt"));
 		}
-		messageConsumer.accept(response);
-	}
+		this.reply(replyToken, new TextMessage(translation.getTranslatedText()));
 
-	private void handleSticker(String replyToken, StickerMessageContent content) {
-		reply(replyToken, new StickerMessage(content.getPackageId(), content.getStickerId()));
 	}
 
 	private void handleTextContent(String replyToken, Event event, TextMessageContent content) throws Exception {
 		String text = content.getText();
-
 		log.info("Got text message from {}: {}", replyToken, text);
-		switch (text) {
-		case "@profile": {
-			String userId = (event.getSource().getUserId() != null ? event.getSource().getUserId()
-					: event.getSource().getSenderId());
-			if (userId != null) {
-				lineMessagingClient.getProfile(userId).whenComplete((profile, throwable) -> {
-					if (throwable != null) {
-						this.replyText(replyToken, throwable.getMessage());
-						return;
-					}
-
-					this.reply(replyToken, Arrays.asList(new TextMessage("Display name: " + profile.getDisplayName()),
-							new TextMessage("Status message: " + profile.getStatusMessage())));
-
-				});
-			} else {
-				this.replyText(replyToken, "Bot can't use profile API without user ID");
-			}
-			break;
-		}
-		case "@bye": {
-			Source source = event.getSource();
-			if (source instanceof GroupSource) {
-				this.replyText(replyToken, "Leaving group");
-				lineMessagingClient.leaveGroup(((GroupSource) source).getGroupId()).get();
-			} else if (source instanceof RoomSource) {
-				this.replyText(replyToken, "Leaving room");
-				lineMessagingClient.leaveRoom(((RoomSource) source).getRoomId()).get();
-			} else {
-				this.replyText(replyToken, "Bot can't leave from 1:1 chat");
-			}
-			break;
-		}
-		case "@confirm": {
-			ConfirmTemplate confirmTemplate = new ConfirmTemplate("Do it?", new MessageAction("Yes", "Yes!"),
-					new MessageAction("No", "No!"));
-			TemplateMessage templateMessage = new TemplateMessage("Confirm alt text", confirmTemplate);
-			this.reply(replyToken, templateMessage);
-			break;
-		}
-		case "@buttons": {
-			String imageUrl = createUri("/static/buttons/1040.jpg");
-			ButtonsTemplate buttonsTemplate = new ButtonsTemplate(imageUrl, "My button sample", "Hello, my button",
-					Arrays.asList(new URIAction("Go to line.me", "https://line.me"),
-							new PostbackAction("Say hello1", "hello こんにちは"),
-							new PostbackAction("言 hello2", "hello こんにちは", "hello こんにちは"),
-							new MessageAction("Say message", "Rice=米")));
-			TemplateMessage templateMessage = new TemplateMessage("Button alt text", buttonsTemplate);
-			this.reply(replyToken, templateMessage);
-			break;
-		}
-		case "@carousel": {
-			String imageUrl = createUri("/static/buttons/1040.jpg");
-			CarouselTemplate carouselTemplate = new CarouselTemplate(Arrays.asList(
-					new CarouselColumn(imageUrl, "hoge", "fuga",
-							Arrays.asList(new URIAction("Go to line.me", "https://line.me"),
-									new PostbackAction("Say hello1", "hello こんにちは"))),
-					new CarouselColumn(imageUrl, "hoge", "fuga",
-							Arrays.asList(new PostbackAction("言 hello2", "hello こんにちは", "hello こんにちは"),
-									new MessageAction("Say message", "Rice=米")))));
-			TemplateMessage templateMessage = new TemplateMessage("Carousel alt text", carouselTemplate);
-			this.reply(replyToken, templateMessage);
-			break;
-		}
-		case "@imagemap":
-			this.reply(replyToken, new ImagemapMessage(createUri("/static/rich"), "This is alt text",
-					new ImagemapBaseSize(1040, 1040),
-					Arrays.asList(new URIImagemapAction("https://www.google.co.th/", new ImagemapArea(0, 0, 520, 520)),
-							new URIImagemapAction("https://store.line.me/family/music/en",
-									new ImagemapArea(520, 0, 520, 520)),
-							new URIImagemapAction("https://store.line.me/family/play/en",
-									new ImagemapArea(0, 520, 520, 520)),
-							new MessageImagemapAction("URANAI!", new ImagemapArea(520, 520, 520, 520)))));
-			break;
-		default:
-			log.info("Returns echo message {}: {}", replyToken, text);
-			if (text.indexOf(".") == 0) {
-				this.replyText(replyToken, text.replace(".", ""));
-			}
-			break;
+		if (text.indexOf(".") == 0) {
+			this.replyText(replyToken, text.replace(".", ""));
 		}
 	}
 
-	private static String createUri(String path) {
-		return ServletUriComponentsBuilder.fromCurrentContextPath().path(path).build().toUriString();
+	private Translate getTranslateService() throws Exception {
+		return TranslateOptions.newBuilder()
+				.setCredentials(ServiceAccountCredentials
+						.fromStream(new ClassPathResource("static/ggc_api_key.json").getInputStream()))
+				.build().getService();
 	}
 
-	private void system(String... args) {
-		ProcessBuilder processBuilder = new ProcessBuilder(args);
-		try {
-			Process start = processBuilder.start();
-			int i = start.waitFor();
-			log.info("result: {} =>  {}", Arrays.toString(args), i);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		} catch (InterruptedException e) {
-			log.info("Interrupted", e);
-			Thread.currentThread().interrupt();
-		}
+	private Vision getVisionService() throws Exception {
+		GoogleCredential credential = GoogleCredential
+				.fromStream(new ClassPathResource("static/ggc_api_key.json").getInputStream())
+				.createScoped(VisionScopes.all());
+		return new Vision.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance(),
+				credential).build();
 	}
 
-	private static DownloadedContent saveContent(String ext, MessageContentResponse responseBody) {
-		log.info("Got content-type: {}", responseBody);
-
-		DownloadedContent tempFile = createTempFile(ext);
-		try (OutputStream outputStream = Files.newOutputStream(tempFile.path)) {
-			ByteStreams.copy(responseBody.getStream(), outputStream);
-			log.info("Saved {}: {}", ext, tempFile);
-			return tempFile;
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
-	}
-
-	private static DownloadedContent createTempFile(String ext) {
-		String fileName = LocalDateTime.now().toString() + '-' + UUID.randomUUID().toString() + '.' + ext;
-		Path tempFile = KitchenSinkApplication.downloadedContentDir.resolve(fileName);
-		tempFile.toFile().deleteOnExit();
-		return new DownloadedContent(tempFile, createUri("/downloaded/" + tempFile.getFileName()));
-	}
-
-	@Value
-	public static class DownloadedContent {
-		Path path;
-		String uri;
-	}
 }
